@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import kz.dar.academy.postcoreapi.model.PostModel;
 import kz.dar.academy.postcoreapi.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,11 +15,14 @@ import java.util.List;
 public class PostController {
 
     @Autowired
+    Environment environment;
+
+    @Autowired
     private PostService postService;
 
     @GetMapping("check")
     public ResponseEntity<String> check() {
-        return ResponseEntity.ok("post-core-api is working");
+        return ResponseEntity.ok("post-core-api is working at " + environment.getProperty("local.server.port"));
     }
 
     @PostMapping
