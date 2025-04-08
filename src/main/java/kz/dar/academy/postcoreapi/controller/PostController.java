@@ -20,6 +20,7 @@ public class PostController {
     @Autowired
     private PostService postService;
 
+
     @GetMapping("check")
     public ResponseEntity<String> check() {
         return ResponseEntity.ok("post-core-api is working at " + environment.getProperty("local.server.port"));
