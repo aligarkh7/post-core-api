@@ -2,6 +2,8 @@ package kz.dar.academy.postcoreapi.controller;
 
 import jakarta.validation.Valid;
 import kz.dar.academy.postcoreapi.model.PostModel;
+import kz.dar.academy.postcoreapi.model.PostRequest;
+import kz.dar.academy.postcoreapi.model.PostResponse;
 import kz.dar.academy.postcoreapi.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -13,13 +15,11 @@ import java.util.List;
 @RestController
 @RequestMapping("post")
 public class PostController {
-
     @Autowired
     Environment environment;
 
     @Autowired
     private PostService postService;
-
 
     @GetMapping("check")
     public ResponseEntity<String> check() {
@@ -27,29 +27,29 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createPost(@Valid @RequestBody PostModel postModel) {
-        postService.createPost(postModel);
-        return ResponseEntity.ok("Post is created");
+    public PostResponse createPost(@Valid @RequestBody PostRequest postRequest) {
+        return postService.createPost(postRequest);
     }
 
     @GetMapping("all")
-    public List<PostModel> getAllPosts() {
+    public List<PostResponse> getAllPosts() {
         return postService.getAllPosts();
     }
 
-    @GetMapping("{postId}")
-    public PostModel getPostById(@PathVariable String postId) {
+    @GetMapping
+    public PostResponse getPostById(@RequestParam String postId) {
         return postService.getPostById(postId);
     }
 
-    @PutMapping("{postId}")
-    public ResponseEntity<String> updatePostById(@PathVariable String postId,
-                                                 @Valid @RequestBody PostModel postModel) {
-        return ResponseEntity.ok(postService.updatePostById(postId, postModel) ? "Post is modified" : "The post does not exist");
+    @PutMapping
+    public PostResponse updatePostById(@RequestParam String postId,
+                                       @Valid @RequestBody PostRequest postRequest) {
+        postRequest.setPostId(postId);
+        return postService.updatePostById(postId, postRequest);
     }
 
-    @DeleteMapping("{postId}")
-    public ResponseEntity<String> deletePostById(@PathVariable String postId) {
-        return ResponseEntity.ok(postService.deletePostById(postId) ? "Post is deleted" : "Post is deleted or does not exist");
+    @DeleteMapping
+    public void deletePostById(@RequestParam String postId) {
+        postService.deletePostById(postId);
     }
 }

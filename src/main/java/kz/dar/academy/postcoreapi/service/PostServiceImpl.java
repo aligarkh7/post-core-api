@@ -1,51 +1,68 @@
 package kz.dar.academy.postcoreapi.service;
 
-import kz.dar.academy.postcoreapi.model.PostModel;
+import kz.dar.academy.postcoreapi.model.PostRequest;
+import kz.dar.academy.postcoreapi.model.PostResponse;
+import kz.dar.academy.postcoreapi.repository.PostEntity;
+import kz.dar.academy.postcoreapi.repository.PostRepository;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl implements PostService {
-    private static final HashMap<String, PostModel> postsMap = new HashMap<>();
+
+    @Autowired
+    private PostRepository postRepository;
+
+    static ModelMapper modelMapper = new ModelMapper();
+
+    static {
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+    }
+
 
     @Override
-    public void createPost(PostModel postModel) {
-        postModel.setPostId(UUID.randomUUID().toString());
-        postsMap.put(postModel.getPostId(), postModel);
+    public PostResponse createPost(PostRequest postRequest) {
+        postRequest.setPostId(UUID.randomUUID().toString());
+
+        PostEntity postEntity = modelMapper.map(postRequest, PostEntity.class);
+        postRepository.save(postEntity);
+
+        return modelMapper.map(postEntity, PostResponse.class);
     }
 
     @Override
-    public List<PostModel> getAllPosts() {
-        return new ArrayList<>(postsMap.values());
+    public List<PostResponse> getAllPosts() {
+        return postRepository.findPostEntitiesBy().stream().map(postEntity -> modelMapper.map(postEntity, PostResponse.class))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public PostModel getPostById(String postId) {
-        return postsMap.get(postId);
+    public PostResponse getPostById(String postId) {
+        PostEntity postEntity = postRepository.findPostEntityByPostId(postId);
+        return modelMapper.map(postEntity, PostResponse.class);
     }
 
     @Override
-    public boolean updatePostById(String postId, PostModel postModel) {
-        if (!postsMap.containsKey(postId)) {
-            return false;
-        }
+    public PostResponse updatePostById(String postId, PostRequest postRequest) {
+        PostEntity postEntity = modelMapper.map(postRequest, PostEntity.class);
 
-        postModel.setPostId(postId);
-        postsMap.put(postId, postModel);
-        return true;
+        PostEntity dbPostEntity = postRepository.findPostEntityByPostId(postRequest.getPostId());
+
+        postEntity.setId(dbPostEntity.getId());
+
+        postRepository.save(postEntity);
+
+        return modelMapper.map(postEntity, PostResponse.class);
     }
 
     @Override
-    public boolean deletePostById(String postId) {
-        if (!postsMap.containsKey(postId)) {
-            return false;
-        }
-
-        postsMap.remove(postId);
-        return true;
+    public void deletePostById(String postId) {
+        postRepository.deletePostEntityByPostId(postId);
     }
 }
